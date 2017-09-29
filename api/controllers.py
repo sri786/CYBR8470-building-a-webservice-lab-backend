@@ -39,6 +39,7 @@ from api.pagination import *
 import json, datetime, pytz
 from django.core import serializers
 import requests
+import pprint
 
 
 def home(request):
@@ -157,6 +158,165 @@ class Events(APIView):
         content = {'events': json_data}
         return HttpResponse(json_data, content_type='json')
 
+
+class DogDetail(APIView):
+    permission_classes = (AllowAny,)
+    parser_classes = (parsers.JSONParser,parsers.FormParser)
+    renderer_classes = (renderers.JSONRenderer, )
+    def get_object(self, pk):
+        try:
+            return Dog.objects.get(pk=pk)
+        except Dog.DoesNotExist:
+            raise Http404
+
+    def delete(self, request, pk, format=None):
+        Dog = self.get_object(pk)
+        Dog.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def get(self, request, pk,format=None):
+        Dog = self.get_object(pk)
+        json_data = serializers.serialize('json', [Dog,])
+        return HttpResponse(json_data, content_type='json')
+
+
+    def put(self, request, pk,format=None):
+        Dog = self.get_object(pk)
+	if request.data.get('name'):
+        	Dog.name = request.data.get('name')
+	if request.data.get('age'):
+		Dog.age = request.data.get('age')
+	if request.data.get('breed'):
+		Dog.breed = request.data.get('breed')
+	if request.data.get('gender'):
+		Dog.gender = request.data.get('gender')
+	if request.data.get('color'):
+		Dog.color = request.data.get('color')
+	if request.data.get('favouritefood'):
+		Dog.favoritefood = request.data.get('favouritefood')
+	if request.data.get('favouritetoy'):
+		Dog.favoritetoy = request.data.get('favouritetoy')
+        json_data = serializers.serialize('json', [Dog,])
+	Dog.save()
+        return HttpResponse(json_data, content_type='json')
+
+class BreedDetail(APIView):
+    permission_classes = (AllowAny,)
+    parser_classes = (parsers.JSONParser,parsers.FormParser)
+    renderer_classes = (renderers.JSONRenderer, )
+    def get_object(self, pk):
+        try:
+            return Breed.objects.get(pk=pk)
+        except Breed.DoesNotExist:
+            raise Http404
+
+    def delete(self, request, pk, format=None):
+        Breed = self.get_object(pk)
+        Breed.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+    def get(self, request, pk,format=None):
+        Breed = self.get_object(pk)
+        json_data = serializers.serialize('json', [Breed,])
+        return HttpResponse(json_data, content_type='json')
+
+
+    def put(self, request, pk,format=None):
+        Breed = self.get_object(pk)
+	if request.data.get('name'):
+        	Breed.name = request.data.get('name')
+	if request.data.get('size'):
+		Breed.size = request.data.get('size')
+	if request.data.get('friendliness'):
+		Breed.friendliness = request.data.get('friendliness')
+	if request.data.get('trainability'):
+		Breed.trainability = request.data.get('trainability')
+	if request.data.get('shreddingamount'):
+		Breed.shreddingamount = request.data.get('shreddingamount')
+	if request.data.get('exerciseneeds'):
+		Breed.exerciseneeds = request.data.get('exerciseneeds')
+        json_data = serializers.serialize('json', [Breed,])
+	Breed.save()
+        return HttpResponse(json_data, content_type='json')
+
+class DogList(APIView):
+    permission_classes = (AllowAny,)
+    parser_classes = (parsers.JSONParser,parsers.FormParser)
+    renderer_classes = (renderers.JSONRenderer, )
+
+    def post(self, request, *args, **kwargs):
+        print 'REQUEST DATA'
+        print str(request.data)
+        name = request.data.get('name')
+        age = int(request.data.get('age'))
+        breed = request.data.get('breed')
+        gender = request.data.get('gender')
+        color = request.data.get('color')
+        favoritefood = request.data.get('favoritefood')
+        favoritetoy = request.data.get('favoritetoy')
+
+        newDog = Dog(
+	    name = name,
+	    age = age,
+	    breed = Breed.objects.get(name = breed),
+	    gender = gender,
+	    color = color,
+	    favoritefood = favoritefood,
+            favoritetoy = favoritetoy
+        )
+
+        try:
+            newDog.clean_fields()
+        except ValidationError as e:
+            print e
+            return Response({'success':False, 'error':e}, status=status.HTTP_400_BAD_REQUEST)
+
+        newDog.save()
+#        print 'New Event Logged from: ' + requestor
+        return Response({'success': True}, status=status.HTTP_200_OK)
+
+    def get(self, request, format=None):
+        Dogs = Dog.objects.all()
+        json_data = serializers.serialize('json', Dogs)
+        content = {'Dogs': json_data}
+        return HttpResponse(json_data, content_type='json')
+
+class BreedList(APIView):
+    permission_classes = (AllowAny,)
+    parser_classes = (parsers.JSONParser,parsers.FormParser)
+    renderer_classes = (renderers.JSONRenderer, )
+
+    def post(self, request, *args, **kwargs):
+        print 'REQUEST DATA'
+        print str(request.data)
+
+        name = request.data.get('name')
+	size = request.data.get('size')
+	friendliness = request.data.get('friendliness')
+        trainability = request.data.get('trainability')
+        shreddingamount = request.data.get('shreddingamount')
+        exerciseneeds = request.data.get('exerciseneeds')
+
+        newBreed = Breed(
+	    name = name,
+	    size = size,
+	    friendliness = friendliness,
+	    trainability = trainability,
+	    shreddingamount = shreddingamount,
+	    exerciseneeds = exerciseneeds,
+        )
+        newBreed.save()
+#       print 'New Event Logged from: ' + requestor
+        return Response({'success': True}, status=status.HTTP_200_OK)
+
+    def get(self, request, format=None):
+        breeds = Breed.objects.all()
+        json_data = serializers.serialize('json', breeds)
+        content = {'breeds': json_data}
+        return HttpResponse(json_data, content_type='json')
+
+
 class ActivateIFTTT(APIView):
     permission_classes = (AllowAny,)
     parser_classes = (parsers.JSONParser,parsers.FormParser)
@@ -203,5 +363,3 @@ class ActivateIFTTT(APIView):
         newEvent.save()
         print 'New Event Logged'
         return Response({'success': True}, status=status.HTTP_200_OK)
-
-

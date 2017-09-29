@@ -29,3 +29,32 @@ class ApiKey(models.Model):
 
 class ApiKeyAdmin(admin.ModelAdmin):
     list_display = ('owner','key')
+
+class Breed(models.Model):
+     sizes = (
+	('Tiny', 'Tiny'),
+        ('Small', 'Small'),
+        ('Medium', 'Medium'),
+        ('Large', 'Large'),
+       )
+     name = models.CharField(max_length=1000, blank=False)
+     size = models.CharField(max_length=1000, choices=sizes, blank=False)
+     friendliness = models.IntegerField(blank=False, choices=(('one', '1'),('two', '2'),('three', '3'),('four', '4'),('five','5')))
+     trainability = models.IntegerField(blank=False, choices=(('one', '1'),('two', '2'),('three', '3'),('four', '4'),('five','5')))
+     shreddingamount = models.IntegerField(blank=False, choices=(('one', '1'),('two', '2'),('three', '3'),('four', '4'),('five','5')))
+     exerciseneeds = models.IntegerField(blank=False, choices=(('one', '1'),('two', '2'),('three', '3'),('four', '4'),('five','5')))
+
+     def __str__(self):
+	return str(self.name)
+
+class Dog(models.Model):
+     name = models.CharField(max_length=1000, blank=False)
+     age = models.IntegerField()
+     breed = models.ForeignKey(Breed)
+     gender = models.CharField(max_length=10, blank=False, choices=(('Male', 'Male'),('Female', 'Female'),('Other', 'Other')))
+     color = models.CharField(max_length=20, blank=False)
+     favoritefood = models.CharField(max_length=1000, blank=False)
+     favoritetoy = models.CharField(max_length=1000, blank=False)
+
+     def __str__(self):
+	return str(self.name)
